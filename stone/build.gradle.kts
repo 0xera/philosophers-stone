@@ -29,3 +29,7 @@ android {
         jvmTarget = "1.8"
     }
 }
+
+kotlin {
+    jvmToolchain(17)
+}
