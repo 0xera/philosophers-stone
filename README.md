@@ -14,7 +14,7 @@ dependencyResolutionManagement {
 }
 
 dependencies {
-    implementation("com.github.0xera.philosophers-stone:stone:0.1")
+    implementation("com.github.0xera:philosophers-stone:0.1")
 }
 ```
 
