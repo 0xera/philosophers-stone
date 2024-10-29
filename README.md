@@ -1,4 +1,6 @@
-Philosophers Stone
+# Philosopher's Stone
+
+[![](https://jitpack.io/v/0xera/philosophers-stone.svg)](https://jitpack.io/#0xera/philosophers-stone)
 
 The library that will help you extend the life of your application. Use at your own risk!
 
