@@ -4,46 +4,51 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.Worker
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.isForeground
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.log
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.mainHandler
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.saveLastLifeTime
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.worker
 
 internal class PhilosophersStoneReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (!PhilosophersStoneInternal.isEnabled) return
 
-        PhilosophersStoneInternal.log { "BroadcastReceiver: onReceive" }
+        log { "BroadcastReceiver: onReceive" }
 
         if (intent.action == Intent.ACTION_BOOT_COMPLETED && shouldUseService()) {
-            PhilosophersStoneInternal.log { "BroadcastReceiver: start service for ACTION_BOOT_COMPLETED" }
+            log { "BroadcastReceiver: start service for ACTION_BOOT_COMPLETED" }
             context.startService(Intent(context, PhilosophersStoneService::class.java))
             return
         }
 
-        if (!PhilosophersStoneInternal.isForeground) {
-            PhilosophersStoneInternal.worker = Worker.BroadcastReceiver
-            PhilosophersStoneInternal.log { "BroadcastReceiver: wait" }
+        if (!isForeground) {
+            worker = Worker.BroadcastReceiver
+            log { "BroadcastReceiver: wait" }
             for (i in 0 until 80) { // 10s before anr
-                if (PhilosophersStoneInternal.isForeground) break
-                if (PhilosophersStoneInternal.mainHandler.looper.queue.isIdle) {
+                if (isForeground) break
+                if (mainHandler.looper.queue.isIdle) {
                     Thread.sleep(100)
                 } else {
-                    PhilosophersStoneInternal.mainHandler.looper.queue.addIdleHandler {
-                        if (!PhilosophersStoneInternal.isForeground) {
-                            PhilosophersStoneInternal.log { "BroadcastReceiver: send broadcast from IdleHandler" }
+                    mainHandler.looper.queue.addIdleHandler {
+                        if (!isForeground) {
+                            log { "BroadcastReceiver: send broadcast from IdleHandler" }
                             context.sendBroadcast(Intent(context, PhilosophersStoneReceiver::class.java))
-                            PhilosophersStoneInternal.saveLastLifeTime()
+                            saveLastLifeTime()
                         }
                         false // remove after invoke
                     }
-                    PhilosophersStoneInternal.saveLastLifeTime()
+                    saveLastLifeTime()
                     return
                 }
             }
-            if (!PhilosophersStoneInternal.isForeground) {
-                PhilosophersStoneInternal.log { "BroadcastReceiver: send broadcast" }
+            if (!isForeground) {
+                log { "BroadcastReceiver: send broadcast" }
                 context.sendBroadcast(Intent(context, PhilosophersStoneReceiver::class.java))
-                PhilosophersStoneInternal.saveLastLifeTime()
+                saveLastLifeTime()
             } else {
-                PhilosophersStoneInternal.saveLastLifeTime()
+                saveLastLifeTime()
             }
         }
     }

@@ -4,6 +4,11 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.Worker
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.isForeground
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.log
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.mainHandler
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.saveLastLifeTime
+import com.zeroxera.philosophers.stone.PhilosophersStoneInternal.worker
 
 class PhilosophersStoneService : Service() {
     override fun onBind(intent: Intent): IBinder? = null
@@ -19,43 +24,43 @@ class PhilosophersStoneService : Service() {
             return
         }
 
-        if (PhilosophersStoneInternal.worker == Worker.BroadcastReceiver) {
-            PhilosophersStoneInternal.log { "Service: Broadcast Receiver already works" }
+        if (worker == Worker.BroadcastReceiver) {
+            log { "Service: Broadcast Receiver already works" }
             super.onDestroy()
             return
         }
         if (shouldUseService()) {
-            PhilosophersStoneInternal.log { "Service: onDestroy" }
-            if (!PhilosophersStoneInternal.isForeground) {
-                PhilosophersStoneInternal.worker = Worker.Service
-                PhilosophersStoneInternal.log { "Service: wait" }
+            log { "Service: onDestroy" }
+            if (!isForeground) {
+                worker = Worker.Service
+                log { "Service: wait" }
 
-                for (i in 0 until 1980) { // 200s for anr
-                    if (PhilosophersStoneInternal.isForeground) break
-                    if (PhilosophersStoneInternal.mainHandler.looper.queue.isIdle) {
+                for (i in 0 until 1970) { // before 200s for anr and unix time
+                    if (isForeground) break
+                    if (mainHandler.looper.queue.isIdle) {
                         Thread.sleep(100)
                     } else {
-                        PhilosophersStoneInternal.mainHandler.looper.queue.addIdleHandler {
-                            if (!PhilosophersStoneInternal.isForeground) {
-                                PhilosophersStoneInternal.log { "Service: sendBroadcast from IdleHandler" }
+                        mainHandler.looper.queue.addIdleHandler {
+                            if (!isForeground) {
+                                log { "Service: sendBroadcast from IdleHandler" }
                                 sendBroadcast(Intent(this, PhilosophersStoneReceiver::class.java))
-                                PhilosophersStoneInternal.saveLastLifeTime()
+                                saveLastLifeTime()
                             }
                             false // remove after invoke
                         }
-                        PhilosophersStoneInternal.saveLastLifeTime()
+                        saveLastLifeTime()
                         super.onDestroy()
                         return
                     }
                 }
             }
         }
-        if (!PhilosophersStoneInternal.isForeground) {
-            PhilosophersStoneInternal.log { "Service: sendBroadcast" }
+        if (!isForeground) {
+            log { "Service: sendBroadcast" }
             sendBroadcast(Intent(this, PhilosophersStoneReceiver::class.java))
-            PhilosophersStoneInternal.saveLastLifeTime()
+            saveLastLifeTime()
         } else {
-            PhilosophersStoneInternal.saveLastLifeTime()
+            saveLastLifeTime()
         }
         super.onDestroy()
     }
